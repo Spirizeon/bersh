@@ -3,10 +3,12 @@
 # bersh
 A very simple POSIX shell written in C
 
-## inbuilt commands
-- `cd` 
-- `help` 
-- `exit` 
+## inbuilt features
+- supports all basic GNU utils ✅
+- piping ✅
+- basic prompt user@host ✅
+- tab-autocomplete ⚪
+- input redirection ⚪
 
 ## installation
 > ⚠ this shell is still in development, setting it as your login shell may crash your system

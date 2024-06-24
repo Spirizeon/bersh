@@ -247,7 +247,7 @@ if(pipe_position !=-1){
 	char **args1 = malloc(sizeof(char *) * (pipe_position + 1));
 	char **args2 = malloc(sizeof(char *) * (BERSH_TOK_BUFSIZE - pipe_position));
 
-		if(!args1 || args2){
+		if(!args1 || !args2){
 			fprintf(stderr,"bersh: allocation error\n");
 			exit(EXIT_FAILURE);
 		}
