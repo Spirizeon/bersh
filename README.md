@@ -1,3 +1,5 @@
+![image](https://github.com/Spirizeon/bersh/assets/123345456/71540287-918f-4002-bff4-2d385e464eb9)
+
 # bersh
 A very simple POSIX shell written in C
 
