@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <pwd.h>
+#include <errno.h>
+#include <limits.h>
 
 #define BERSH_BUF_SIZE 1024 // 1024 bytes
 #define BERSH_TOK_BUFSIZE 64// token buffer size
@@ -157,12 +160,43 @@ int bersh_execute(char **args){
 		 return bersh_launch(args);
 }
 
+char *get_hostname(){
+	static char hostname[HOST_NAME_MAX];
+	if(gethostname(hostname,sizeof(hostname)) == -1){
+		perror("gethostname");
+		return NULL;
+	}
+	return hostname;
+}
+
+char *get_username(){
+	struct passwd *pw;
+	errno = 0;
+	pw = getpwuid(getuid());
+	if(!pw){
+		if(errno){
+			perror("getpwuid");
+		}
+		return NULL;
+	}
+	return pw ->pw_name;
+}
+
 void bersh_loop(void){
 	char *line;
 	char **args;
 	int status;
 	do{
-		printf("#$: ");
+		char *hostname = get_hostname();
+		char *username = get_username();
+
+		if(hostname!=NULL && username != NULL){
+			printf("%s@%s:$ ",username,hostname);
+		}
+		else{
+			printf("#$: ");
+
+		}
 		line = bersh_read_line();
 		args = bersh_split_line(line);
 		status = bersh_execute(args);
