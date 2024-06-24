@@ -10,6 +10,9 @@ A very simple POSIX shell written in C
 - tab-autocomplete ⚪
 - input redirection ⚪
 
+## Configuration
+bersh shell uses a very minimal `.bershrc` file for its config
+
 ## installation
 > ⚠ this shell is still in development, setting it as your login shell may crash your system
 
