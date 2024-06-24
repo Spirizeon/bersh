@@ -30,6 +30,7 @@ void bersh_loop(void);
 char *get_hostname();
 char *get_username();
 int bersh_pipe(char **args);
+void load_rc_file();
 
 char *builtin_str[] = {
 	"|",
@@ -47,9 +48,8 @@ int(*builtin_func[]) (char **) = {
 };
 
 int main(void){
-	printf("=============================\n");
-	printf("bersh - built by spirizeon 🐚\n");
-	printf("=============================\n");
+
+	load_rc_file();
 	bersh_loop();
 	return 0;
 }
@@ -321,6 +321,28 @@ if(pipe_position !=-1){
 	return 1;
 	}
 
-
+	void load_rc_file(){
+		FILE *rc_file = fopen(".bershrc","r");
+		if(rc_file == NULL){
+			perror("Error opening .bershrc");
+			return;
+		}
+		
+		char line[BERSH_BUF_SIZE];
+		while(fgets(line, sizeof(line), rc_file) != NULL){
+			if(line[0] == '\n' || line[0] == '#'){
+				continue;
+			}
+		
+		char *command = strtok(line,"\n");
+		if(command!=NULL){
+			bersh_execute(bersh_split_line(command));
+		}
+	}
+	fclose(rc_file);
+}
+			
+		
+	
 
 		
