@@ -7,25 +7,48 @@
 #include <errno.h>
 #include <limits.h>
 
+//constants
 #define BERSH_BUF_SIZE 1024 // 1024 bytes
 #define BERSH_TOK_BUFSIZE 64// token buffer size
 #define BERSH_TOK_DELIM " \t\r\n\a" //token delimiter string
 
+
+//function declarations
 int bersh_cd(char **args);
 int bersh_help(char **args);
 int bersh_exit(char **args);
+int bersh_num_builtins();
+int bersh_cd(char **args);
+int bersh_help(char **args);
+int bersh_exit(char **args);
+char *bersh_read_line(void);
+char **bersh_split_line(char *line);
+int bersh_launch(char **args);
+int bersh_execute(char **args);
+void bersh_loop(void);
+char *get_hostname();
+char *get_username();
+int bersh_pipe(char **args);
 
 char *builtin_str[] = {
+	"|",
 	"cd",
 	"help",
 	"exit",
 };
 
+//map keywords to functions
 int(*builtin_func[]) (char **) = {
+	&bersh_pipe,
 	&bersh_cd,
 	&bersh_help,
 	&bersh_exit,
 };
+
+int main(void){
+	bersh_loop();
+	return 0;
+}
 
 int bersh_num_builtins(){
 	return sizeof(builtin_str)/sizeof(char *);
@@ -143,7 +166,6 @@ int bersh_launch(char **args){
 	return 1;
 }
 
-	
 
 int bersh_execute(char **args){
 	int i;
@@ -152,7 +174,14 @@ int bersh_execute(char **args){
 		return 1;
 	}
 
-	for(int i=0;i<bersh_num_builtins();i++){
+	//check for pipe 
+	for(int i = 0;args[i]!= NULL;i++){
+		if(strcmp(args[i],"|") == 0){
+			return bersh_pipe(args);
+		}
+	}
+
+	for(int i=1;i<bersh_num_builtins();i++){
 		 if(strcmp(args[0],builtin_str[i]) == 0){
 		 	return(*builtin_func[i])(args);
 		 }
@@ -206,8 +235,88 @@ void bersh_loop(void){
 	} while(status);
 }
 
-
-int main(void){
-	bersh_loop();
-	return 0;
+int bersh_pipe(char **args){
+	int pipe_position = -1;
+for(int i = 0;args[i]!= NULL;i++){
+		if(strcmp(args[i],"|") == 0){
+			pipe_position = i;
+			break;
+		}
 }
+if(pipe_position !=-1){
+	char **args1 = malloc(sizeof(char *) * (pipe_position + 1));
+	char **args2 = malloc(sizeof(char *) * (BERSH_TOK_BUFSIZE - pipe_position));
+
+		if(!args1 || args2){
+			fprintf(stderr,"bersh: allocation error\n");
+			exit(EXIT_FAILURE);
+		}
+
+		for(int i=0;i<pipe_position;i++){
+			args1[i] = args[i];
+		}
+		int j = 0;
+		for(int i=pipe_position+1;args[i] != NULL;i++){
+			args2[j++] = args[i];
+		}
+		args2[j] = NULL;
+
+		int pipe_fd[2];
+		pid_t pid1,pid2;
+		int status;
+
+		if(pipe(pipe_fd) == -1){
+			perror("pipe");
+			exit(EXIT_FAILURE);
+		}
+
+		pid1 = fork();
+		if(pid1 == 0){
+			close(pipe_fd[0]);
+			dup2(pipe_fd[1],STDOUT_FILENO);
+			close(pipe_fd[1]);
+			
+			if(execvp(args1[0],args1) == -1){
+				perror("bersh");
+				exit(EXIT_FAILURE);
+			} 
+		} else if(pid1<0){
+			perror("bersh");
+		}
+		else{
+			pid2 = fork();
+			if(pid2 == 0){
+			            // Child 2: Execute the second command
+            close(pipe_fd[1]);  // Close unused write end of the pipe
+            dup2(pipe_fd[0], STDIN_FILENO);  // Redirect stdin to the pipe
+            close(pipe_fd[0]);  // Close the pipe read end
+
+            if (execvp(args2[0], args2) == -1) {
+                perror("bersh");
+                exit(EXIT_FAILURE);
+            }
+        } else if (pid2 < 0) {
+            perror("bersh");
+        } else {
+            // Parent process
+            close(pipe_fd[0]);
+            close(pipe_fd[1]);
+            waitpid(pid1, &status, 0);
+            waitpid(pid2, &status, 0);
+        }
+    }
+
+		free(args1);
+		free(args2);
+
+		} else { fprintf(stderr,"bersh: could not pipe\n");
+	exit(EXIT_FAILURE);
+
+	}
+
+	return 1;
+	}
+
+
+
+		
