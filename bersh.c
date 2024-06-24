@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <limits.h>
 
+
 //constants
 #define BERSH_BUF_SIZE 1024 // 1024 bytes
 #define BERSH_TOK_BUFSIZE 64// token buffer size
@@ -46,6 +47,9 @@ int(*builtin_func[]) (char **) = {
 };
 
 int main(void){
+	printf("=============================\n");
+	printf("bersh - built by spirizeon 🐚\n");
+	printf("=============================\n");
 	bersh_loop();
 	return 0;
 }
